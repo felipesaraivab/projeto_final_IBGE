@@ -2,7 +2,7 @@
 
 > Projeto de Engenharia de Dados — CESAR School · GP2 · 2025
 
-**Integrantes:** Felipe Saraiva · Anna Clara · Lucas Barros
+**Integrantes:** Felipe Saraiva · Anna Clara · Lucas Barros · Renan Carvalho · Fabiana Lima
 
 ---
 
