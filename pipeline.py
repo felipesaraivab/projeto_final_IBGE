@@ -14,10 +14,10 @@ from load import Load
 logger = logging.getLogger(__name__)
 
 
-def task_extrair(uf_codigo="26"):
-    logger.info("▶ TASK: extrair_dados — UF %s", uf_codigo)
+def task_extrair():
+    logger.info("▶ TASK: extrair_dados — todas as UFs")
     extractor = Extract(Config())
-    raw = extractor.fetch_all(uf_codigo)
+    raw = extractor.fetch_all()
     logger.info("✔ Extração concluída — %d variáveis", len(raw))
     return raw
 
@@ -38,9 +38,9 @@ def task_carregar(docs):
     return metrics
 
 
-def ibge_etl_flow(uf_codigo="26"):
-    print("\n🚀 Iniciando pipeline IBGE ETL...\n")
-    raw = task_extrair(uf_codigo)
+def ibge_etl_flow():
+    print("\n🚀 Iniciando pipeline IBGE ETL — todas as UFs...\n")
+    raw = task_extrair()
     docs = task_transformar(raw)
     metrics = task_carregar(docs)
     print(f"\n✅ Pipeline concluído! inseridos={metrics['inserted']} | "
@@ -49,4 +49,4 @@ def ibge_etl_flow(uf_codigo="26"):
 
 
 if __name__ == "__main__":
-    ibge_etl_flow("26")
+    ibge_etl_flow()

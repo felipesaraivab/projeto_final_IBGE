@@ -1,11 +1,6 @@
 """
 etl/extract.py — Classe responsável por consumir a API do IBGE.
-
-Responsabilidades:
-- Montar a URL correta para cada variável / localidade / período
-- Tratar erros HTTP, timeouts e respostas inválidas
-- Implementar retry automático com back-off exponencial (tenacity)
-- Retornar o JSON bruto sem nenhuma transformação
+Busca dados de TODAS as UFs do Brasil.
 """
 
 import logging
@@ -32,16 +27,8 @@ class IBGEExtractError(Exception):
 class Extract:
     """
     Extrai dados da API PNAD Contínua do IBGE (Tabela 4093).
-
-    A URL segue o padrão:
-        /api/v3/agregados/{tabela}/periodos/{periodos}/variaveis/{variavel}
-        ?localidades=N3[{uf_codigo}]&classificacao={classificacao}
-
-    Referência: https://servicodados.ibge.gov.br/api/docs/agregados
+    Coleta todas as UFs do Brasil em uma única chamada por variável.
     """
-
-    # Classificação 2 = Sexo (código da classificação na Tabela 4093)
-    _CLASSIFICACAO_SEXO = "2[1,2,93]"  # 1=Homens, 2=Mulheres, 93=Total
 
     def __init__(self, config: Config | None = None):
         self.config = config or Config()
@@ -49,7 +36,6 @@ class Extract:
         self.session.headers.update({"Accept": "application/json"})
 
     def _build_url(self, variavel: str) -> str:
-        """Monta a URL da API para uma variável específica."""
         base = self.config.IBGE_BASE_URL
         tabela = self.config.IBGE_TABELA
         periodos = self.config.IBGE_PERIODOS
@@ -63,15 +49,13 @@ class Extract:
         reraise=True,
     )
     def _get(self, url: str, params: dict) -> Any:
-        """Executa o GET com retry automático em caso de falha de rede."""
         try:
-            response = self.session.get(url, params=params, timeout=30)
+            response = self.session.get(url, params=params, timeout=60)
             response.raise_for_status()
         except requests.HTTPError as exc:
             raise IBGEExtractError(
                 f"Erro HTTP {exc.response.status_code} em {url}"
             ) from exc
-
         try:
             return response.json()
         except ValueError as exc:
@@ -79,32 +63,11 @@ class Extract:
                 f"Resposta não é JSON válido: {response.text[:200]}"
             ) from exc
 
-    def fetch_variable(
-        self,
-        variavel: str,
-        uf_codigo: str = "26",  # 26 = Pernambuco (padrão do projeto)
-    ) -> list[dict]:
-        """
-        Busca os dados de uma variável para uma UF específica, desagregados por sexo.
-
-        Args:
-            variavel: Código da variável IBGE (ex.: "4099")
-            uf_codigo: Código IBGE da UF (ex.: "26" para PE)
-
-        Returns:
-            Lista de objetos JSON retornados pela API.
-        """
+    def fetch_variable(self, variavel: str) -> list[dict]:
+        """Busca dados de uma variável para TODAS as UFs do Brasil."""
         url = self._build_url(variavel)
-        params = {
-            "localidades": f"N3[{uf_codigo}]",
-        }
-        logger.info(
-            "Extraindo variável %s — UF %s | url=%s params=%s",
-            variavel,
-            uf_codigo,
-            url,
-            params,
-        )
+        params = {"localidades": "N3"}
+        logger.info("Extraindo variável %s — todas as UFs", variavel)
         data = self._get(url, params)
         if not isinstance(data, list) or len(data) == 0:
             raise IBGEExtractError(
@@ -112,19 +75,13 @@ class Extract:
             )
         return data
 
-    def fetch_all(self, uf_codigo: str = "26") -> dict[str, list[dict]]:
-        """
-        Busca todas as variáveis configuradas para uma UF.
-
-        Returns:
-            Dicionário {cod_variavel: dados_brutos}
-        """
+    def fetch_all(self) -> dict[str, list[dict]]:
+        """Busca todas as variáveis para todas as UFs."""
         results: dict[str, list[dict]] = {}
         for variavel in self.config.IBGE_VARIAVEIS:
             variavel = variavel.strip()
             try:
-                results[variavel] = self.fetch_variable(variavel, uf_codigo)
+                results[variavel] = self.fetch_variable(variavel)
             except IBGEExtractError as exc:
                 logger.error("Falha ao extrair variável %s: %s", variavel, exc)
-                # Continua com as outras variáveis
         return results
