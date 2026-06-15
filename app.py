@@ -319,18 +319,18 @@ HTML_PAGE = """<!DOCTYPE html>
 <header>
   <div>
     <h1>🤖 Agente IBGE — PNAD Contínua</h1>
-    <span>Dados do mercado de trabalho de Pernambuco • 2012–2025</span>
+    <span>Dados do mercado de trabalho de todos os estados • 2012–2025</span>
   </div>
 </header>
 <div id="chat">
   <div class="msg assistant">Olá! Sou um agente de IA com acesso direto aos dados da PNAD Contínua (IBGE) armazenados no MongoDB Atlas.
 
 Posso responder perguntas sobre:
-• Taxa de desocupação (desemprego)
-• Taxa de participação na força de trabalho
-• Taxa de informalidade
+- Taxa de desocupação (desemprego)
+- Taxa de participação na força de trabalho
+- Taxa de informalidade
 
-Dados disponíveis para Pernambuco, de 2012 a 2025, por sexo e trimestre.
+Dados disponíveis para todos os 27 estados do Brasil, de 2012 a 2025, por período trimestral.
 
 Como posso ajudar?</div>
 </div>
