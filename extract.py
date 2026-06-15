@@ -67,8 +67,7 @@ class Extract:
         """Busca dados de uma variável para TODAS as UFs do Brasil."""
         url = self._build_url(variavel)
         params = {
-            "localidades": "N3",
-            "classificacao": "2[1,2]",  # 1=Homens, 2=Mulheres
+    "localidades": "N3",
         }
         logger.info("Extraindo variável %s — todas as UFs", variavel)
         data = self._get(url, params)
